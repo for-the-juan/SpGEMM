@@ -271,7 +271,7 @@ void csr2tile_row_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     for (int ri = 0; ri < 4; ri++)
     {
         for (int stride = 0; stride < tile_size_n / MaskBits; stride++){
-            DEBUG_PRINT("[CSR2TILE MASK CHECK] %d row %d bitmask in a tile: %04x\n", ri, stride, matrix->mask[
+            DEBUG_PRINT("[CSR2TILE A MASK CHECK] %d row %d bitmask in %d tile: %04x\n", ri, stride, tile_id, matrix->mask[
                 tile_id * tile_size_m * (tile_size_n / MaskBits) + ri * (tile_size_n / MaskBits) + stride]);
         }
     }
@@ -280,8 +280,8 @@ void csr2tile_row_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
 void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
 {
     matrix->numtile = 0;
-    matrix->tilem = matrix->m % tile_size_m == 0 ? matrix->m / tile_size_m : (matrix->m / tile_size_m) + 1;
-    matrix->tilen = matrix->n % tile_size_n == 0 ? matrix->n / tile_size_n : (matrix->n / tile_size_n) + 1;
+    matrix->tilem = matrix->m % tile_size_n == 0 ? matrix->m / tile_size_n : (matrix->m / tile_size_n) + 1;
+    matrix->tilen = matrix->n % tile_size_m == 0 ? matrix->n / tile_size_m : (matrix->n / tile_size_m) + 1;
 
 	SMatrix *BT = (SMatrix *)malloc(sizeof(SMatrix));
 
@@ -306,7 +306,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     BT->rowpointer = cscColPtrB;
 
 
-    step1_kernel(BT, tile_size_n, tile_size_m);
+    step1_kernel(BT, tile_size_m, tile_size_n);
     exclusive_scan(BT->tile_ptr, BT->tilem + 1);
 
     BT->numtile = BT->tile_ptr[BT->tilem];
@@ -318,7 +318,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     memset(BT->tile_nnz, 0, (BT->numtile + 1) * sizeof(int));
     BT->tile_csr_Ptr = (TILE_CSR_PTR_TYPE *)malloc((BT->numtile * tile_size_m) * sizeof(TILE_CSR_PTR_TYPE));
     memset(BT->tile_csr_Ptr, 0, (BT->numtile * tile_size_m) * sizeof(TILE_CSR_PTR_TYPE));
-    step2_kernel(BT, BT->tile_csr_Ptr, tile_size_n, tile_size_m);
+    step2_kernel(BT, BT->tile_csr_Ptr, tile_size_m, tile_size_n);
     exclusive_scan(BT->tile_nnz, BT->numtile + 1);
 
     // for (int i=0; i < BT->numtile; i ++)
@@ -329,7 +329,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     matrix->tile_ptr = (MAT_PTR_TYPE *)malloc((matrix->tilem + 1) * sizeof(MAT_PTR_TYPE));
     memset(matrix->tile_ptr, 0, (matrix->tilem + 1) * sizeof(MAT_PTR_TYPE));
 
-    step1_kernel(matrix, tile_size_m, tile_size_n);
+    step1_kernel(matrix, tile_size_n, tile_size_m);
     exclusive_scan(matrix->tile_ptr, matrix->tilem + 1);
     matrix->numtile = matrix->tile_ptr[matrix->tilem];
     matrix->tile_columnidx = (int *)malloc(matrix->numtile * sizeof(int));
@@ -353,11 +353,11 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     for (int i = 0; i < matrix->tilem; i++)
     {
         memset(flag, 0, matrix->tilen * sizeof(char));
-        int start = i * tile_size_m;
-        int end = i == matrix->tilem - 1 ? matrix->m : (i + 1) * tile_size_m;
+        int start = i * tile_size_n;
+        int end = i == matrix->tilem - 1 ? matrix->m : (i + 1) * tile_size_n;
         for (int j = matrix->rowpointer[start]; j < matrix->rowpointer[end]; j++)
         {
-            int jc = matrix->columnindex[j] / tile_size_n;
+            int jc = matrix->columnindex[j] / tile_size_m;
             if (flag[jc] == 0)
             {
                 flag[jc] = 1;
@@ -369,8 +369,8 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
 
 
 
-    matrix->tile_csr_Ptr = (TILE_CSR_PTR_TYPE *)malloc((matrix->numtile * tile_size_m) * sizeof(TILE_CSR_PTR_TYPE));
-    memset(matrix->tile_csr_Ptr, 0, (matrix->numtile * tile_size_m) * sizeof(TILE_CSR_PTR_TYPE));
+    matrix->tile_csr_Ptr = (TILE_CSR_PTR_TYPE *)malloc((matrix->numtile * tile_size_n) * sizeof(TILE_CSR_PTR_TYPE));
+    memset(matrix->tile_csr_Ptr, 0, (matrix->numtile * tile_size_n) * sizeof(TILE_CSR_PTR_TYPE));
 
     matrix->tile_csr_Col = (TILE_CSR_COL_TYPE *)malloc(matrix->nnz * sizeof(TILE_CSR_COL_TYPE));
     memset(matrix->tile_csr_Col, 0, matrix->nnz * sizeof(TILE_CSR_COL_TYPE));
@@ -378,8 +378,8 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
     matrix->tile_csr_Value = (MAT_VAL_TYPE *)malloc(matrix->nnz * sizeof(MAT_VAL_TYPE));
     memset(matrix->tile_csr_Value, 0, matrix->nnz * sizeof(MAT_VAL_TYPE));
 
-    matrix->mask = (TILE_MASK_TYPE *)malloc(matrix->numtile * tile_size_m * sizeof(TILE_MASK_TYPE));
-    memset(matrix->mask, 0, matrix->numtile * tile_size_m * sizeof(TILE_MASK_TYPE));
+    matrix->mask = (TILE_MASK_TYPE *)malloc(matrix->numtile * tile_size_n * tile_size_m / MaskBits * sizeof(TILE_MASK_TYPE));
+    memset(matrix->mask, 0, matrix->numtile * tile_size_n * tile_size_m / MaskBits * sizeof(TILE_MASK_TYPE));
 
 
 #pragma omp parallel for
@@ -393,10 +393,10 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
         int colbnum = matrix->csc_tile_ptr[blki + 1] - matrix->csc_tile_ptr[blki];
         SMatrix *subrowmatrixB_trans = (SMatrix *)malloc(colbnum * sizeof(SMatrix));
 
-        int rowlength = blki == matrix->tilen - 1 ? matrix->n - (matrix->tilen - 1) * tile_size_n : tile_size_n;
+        int rowlength = blki == matrix->tilen - 1 ? matrix->n - (matrix->tilen - 1) * tile_size_m : tile_size_m;
 
-        int start = blki * tile_size_n;  // FIXED: blki iterates over tilen (columns)
-        int end = blki == matrix->tilen - 1 ? matrix->n : (blki + 1) * tile_size_n;
+        int start = blki * tile_size_m;
+        int end = blki == matrix->tilen - 1 ? matrix->n : (blki + 1) * tile_size_m;
 
         for (int bi = 0; bi < colbnum; bi++)
         {
@@ -419,13 +419,13 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
                 int ki;
                 for (int k = matrix->csc_tile_ptr[blki], ki = 0; k < matrix->csc_tile_ptr[blki + 1], ki < colbnum; k++, ki++)
                 {
-                    int kcstart = matrix->csc_tile_rowidx[k] * tile_size_m;
-                    int kcend = matrix->csc_tile_rowidx[k] == (matrix->m - 1) ? matrix->m : (matrix->csc_tile_rowidx[k] + 1) * tile_size_m;
+                    int kcstart = matrix->csc_tile_rowidx[k] * tile_size_n;
+                    int kcend = matrix->csc_tile_rowidx[k] == (matrix->m - 1) ? matrix->m : (matrix->csc_tile_rowidx[k] + 1) * tile_size_n;
                     if (cscRowIdxB[j] >= kcstart && cscRowIdxB[j] < kcend)
                     {
                         num[ki]++;
                         subrowmatrixB_trans[ki].value[num[ki] - 1] = cscValB[j];
-                        subrowmatrixB_trans[ki].columnindex[num[ki] - 1] = cscRowIdxB[j] - matrix->csc_tile_rowidx[k] * tile_size_m;
+                        subrowmatrixB_trans[ki].columnindex[num[ki] - 1] = cscRowIdxB[j] - matrix->csc_tile_rowidx[k] * tile_size_n;
                         break;
                     }
                 }
@@ -441,7 +441,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
         {
             int tileid = matrix->csc_tile_ptr[blki] + bi;
             int tilennz = matrix->tile_nnz[tileid + 1] - matrix->tile_nnz[tileid];
-            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_m : tile_size_m;
+            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_n : tile_size_n;
             subrowmatrixB[bi].value = (MAT_VAL_TYPE *)malloc((tilennz) * sizeof(MAT_VAL_TYPE));
             subrowmatrixB[bi].columnindex = (int *)malloc((tilennz) * sizeof(int));
 
@@ -452,7 +452,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
         {
             int tileid = matrix->csc_tile_ptr[blki] + bi;
             int tilennz = matrix->tile_nnz[tileid + 1] - matrix->tile_nnz[tileid];
-            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_m : tile_size_m;
+            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_n : tile_size_n;
             matrix_transposition(rowlength, collength, tilennz,
                                  subrowmatrixB_trans[bi].rowpointer, subrowmatrixB_trans[bi].columnindex, subrowmatrixB_trans[bi].value,
                                  subrowmatrixB[bi].columnindex, subrowmatrixB[bi].rowpointer, subrowmatrixB[bi].value);
@@ -462,7 +462,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
             int tileid = matrix->csc_tile_ptr[blki] + bi;
             int tilennz = matrix->tile_nnz[tileid + 1] - matrix->tile_nnz[tileid];
             int prennz = matrix->tile_nnz[tileid];
-            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_m : tile_size_m;
+            int collength = matrix->csc_tile_rowidx[tileid] == matrix->tilem - 1 ? matrix->m - (matrix->tilem - 1) * tile_size_n : tile_size_n;
             //CSR val&col
             for (int bri = 0; bri < collength; bri++)
             {
@@ -470,16 +470,17 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
                 {
                     int colidx = subrowmatrixB[bi].columnindex[k];
                     matrix->tile_csr_Value[prennz + k] = subrowmatrixB[bi].value[k];
-                    matrix->mask[tileid * tile_size_m + bri] |= (0x1ULL << (tile_size_n - colidx - 1));  // FIXED: use 0x1ULL for 64-bit mask support
-                    // FIXED: encode as (row * tile_size_n + col) to match step3_kernel encoding
-                    matrix->tile_csr_Col[prennz + k] = (bri * tile_size_n) + colidx;
+                    assert((tile_size_m % MaskBits) == 0);
+                    int stride = colidx / MaskBits;
+                    matrix->mask[tileid * tile_size_n * (tile_size_m / MaskBits) + bri * (tile_size_m / MaskBits) + stride] |= (0x1ULL << (MaskBits - colidx % MaskBits - 1));
+                    matrix->tile_csr_Col[prennz + k] = (bri * tile_size_m) + colidx;
                 }
-                matrix->tile_csr_Ptr[tileid * tile_size_m + bri] = subrowmatrixB[bi].rowpointer[bri];
+                matrix->tile_csr_Ptr[tileid * tile_size_n + bri] = subrowmatrixB[bi].rowpointer[bri];
             }
 
-            for (int jid = collength; jid < tile_size_m; jid++)
+            for (int jid = collength; jid < tile_size_n; jid++)
             {
-                matrix->tile_csr_Ptr[tileid * tile_size_m + jid] = subrowmatrixB[bi].rowpointer[collength];
+                matrix->tile_csr_Ptr[tileid * tile_size_n + jid] = subrowmatrixB[bi].rowpointer[collength];
             }
         }
         for (int bi = 0; bi < colbnum; bi++)
@@ -494,6 +495,14 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
         free(subrowmatrixB);
         free(subrowmatrixB_trans);
         free(num);
+    }
+    int tile_id = 3;
+    for (int ci = 0; ci < 4; ci++)
+    {
+        for (int stride = 0; stride < tile_size_m / MaskBits; stride++){
+            DEBUG_PRINT("[CSR2TILE B MASK CHECK] %d row %d bitmask in %d tile: %04x\n", ci, stride, tile_id, matrix->mask[
+                tile_id * tile_size_n * (tile_size_m / MaskBits) + ci * (tile_size_m / MaskBits) + stride]);
+        }
     }
 }
 

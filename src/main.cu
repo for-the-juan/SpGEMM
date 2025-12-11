@@ -173,22 +173,22 @@ int main(int argc, char ** argv)
         printf("CSR to Tile conversion uses %.2f ms\n", time_conversion);
 #endif
 
-// #if SPACE
+#if SPACE
 
-// double tile_bytes = (matrixA->tilem + 1) * sizeof(int) + matrixA->numtile * sizeof(int) + (matrixA->numtile + 1) *sizeof(int) +
-//                 matrixA->nnz * sizeof(MAT_VAL_TYPE) + matrixA->nnz * sizeof(unsigned char) + matrixA->numtile * BLOCK_SIZE * sizeof(unsigned char) +
-//                 matrixA->numtile * BLOCK_SIZE * sizeof(unsigned short);
+double tile_bytes = (matrixA->tilem + 1) * sizeof(int) + matrixA->numtile * sizeof(int) + (matrixA->numtile + 1) *sizeof(int) +
+                matrixA->nnz * sizeof(MAT_VAL_TYPE) + matrixA->nnz * sizeof(unsigned char) + matrixA->numtile * BLOCK_SIZE * sizeof(unsigned char) +
+                matrixA->numtile * BLOCK_SIZE * sizeof(unsigned short);
 
-// double mem = tile_bytes/1024/1024;
+double mem = tile_bytes/1024/1024;
 
-// double CSR_bytes = (matrixA->m +1) * sizeof(int) + (matrixA->nnz) * sizeof(int) + matrixA->nnz * sizeof(MAT_VAL_TYPE);
-// double csr_mem = CSR_bytes /1024/1024;
+double CSR_bytes = (matrixA->m +1) * sizeof(int) + (matrixA->nnz) * sizeof(int) + matrixA->nnz * sizeof(MAT_VAL_TYPE);
+double csr_mem = CSR_bytes /1024/1024;
 
-// printf("tile space overhead = %.2f MB\n", mem);
+printf("tile space overhead = %.2f MB\n", mem);
 
-// #endif
+#endif
 
-//         csr2tile_col_major(matrixB, tile_size_m, tile_size_n);
+        csr2tile_col_major(matrixB, tile_size_m, tile_size_n);
 
 
 //         int blk_intersec_bitmask_len = ceil((double)matrixA->tilen / 32.0);
@@ -342,7 +342,7 @@ int main(int argc, char ** argv)
 
 // #endif
     matrix_destroy(matrixA);
-    // matrix_destroy(matrixB);
+    matrix_destroy(matrixB);
 
     free(matrixA->rowpointer);
     free(matrixA->columnindex);
