@@ -516,6 +516,4 @@ void matrix_destroy(SMatrix *matrix)
     free(matrix->tile_csr_Col);
     free(matrix->tile_csr_Ptr);
     free(matrix->mask);
-
-
 }
