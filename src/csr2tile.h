@@ -183,14 +183,13 @@ void step3_kernel(SMatrix *matrix, int nnz_max, int tilecnt_max, int tile_size_m
                     TILE_CSR_COL_TYPE colidx = csr_colidx_temp[pre_nnz + k];
                     tile_csr_Val[offset + k] = csr_val_temp[pre_nnz + k];
 
-                    // Verify encoding doesn't overflow
-                    TILE_CSR_COL_TYPE encoded = (ri * tile_size_n) + colidx;
                     // if (encoded > 65535) {
                     //     printf("[ERROR] Encoding overflow: ri=%d, tile_size_n=%d, colidx=%d, encoded=%d\n",
                     //            ri, tile_size_n, (int)colidx, (int)encoded);
                     // }
 
-                    tile_csr_Col[offset + k] = encoded;  // FIXED: use tile_size_n for columns
+                    // 在这里得到的row+col
+                    tile_csr_Col[offset + k] = (ri * tile_size_n) + colidx;  // FIXED: use tile_size_n for columns
                     assert((tile_size_n % MaskBits)==0);
                     int stride = colidx / MaskBits;
                     mask[tile_id * tile_size_m * tile_size_n / MaskBits + ri * tile_size_n / MaskBits + stride] |= (0x1ULL << (MaskBits - colidx % MaskBits - 1));
@@ -473,7 +472,7 @@ void csr2tile_col_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
                     assert((tile_size_m % MaskBits) == 0);
                     int stride = colidx / MaskBits;
                     matrix->mask[tileid * tile_size_n * (tile_size_m / MaskBits) + bri * (tile_size_m / MaskBits) + stride] |= (0x1ULL << (MaskBits - colidx % MaskBits - 1));
-                    matrix->tile_csr_Col[prennz + k] = (bri * tile_size_m) + colidx;
+                    matrix->tile_csr_Col[prennz + k] = colidx;
                 }
                 matrix->tile_csr_Ptr[tileid * tile_size_n + bri] = subrowmatrixB[bi].rowpointer[bri];
             }
