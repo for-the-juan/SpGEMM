@@ -37,11 +37,6 @@ int spgemm_cu (         const int             mA,
                  mC, nC, nnzC_golden, csrRowPtrC_golden, csrColIdxC_golden, csrValC_golden,
                  check_result, nnzCub, nnzC, &compression_rate1, &time_cusparse, &gflops_cusparse);
     printf("---------------------------------------------------------------\n");
-
-
-
-
-
     return 0;
 }
 

@@ -275,76 +275,79 @@ printf("tile space overhead = %.2f MB\n", mem);
                &time_step1,&time_step2,&time_step3,&time_malloc,
                tile_size_m, tile_size_n);
 
+    // for (int i = 0; i < 10; i++){
+    //     printf("[DEBUG] tile_ptr[%d]: %d\n", i, matrixC->tile_ptr[i]);
+    // }
+    
+    // write results to text (csv) file
+    FILE *fout = fopen("../data/results_tile.csv", "a");
+    if (fout == NULL)
+        printf("Writing results fails.\n");
+    fprintf(fout, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
+            filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_tile, gflops_tile);
+    fclose(fout);
 
-//     // write results to text (csv) file
-//     FILE *fout = fopen("../data/results_tile.csv", "a");
-//     if (fout == NULL)
-//         printf("Writing results fails.\n");
-//     fprintf(fout, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
-//             filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_tile, gflops_tile);
-//     fclose(fout);
-
-//     // write runtime of each step to text (scv) file
-//     FILE *fout_time = fopen("../data/step_runtime.csv", "a");
-//     if (fout_time == NULL)
-//         printf("Writing results fails.\n");
-//     fprintf(fout_time, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f,%f,%f\n",
-//                 filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_step1, time_step2,time_step3,time_malloc);
-//     fclose(fout_time);
+    // write runtime of each step to text (scv) file
+    FILE *fout_time = fopen("../data/step_runtime.csv", "a");
+    if (fout_time == NULL)
+        printf("Writing results fails.\n");
+    fprintf(fout_time, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f,%f,%f\n",
+                filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_step1, time_step2,time_step3,time_malloc);
+    fclose(fout_time);
     
 
-// #if SPACE
-//     // write memory space of CSR and tile format to text (scv) file
-//     FILE *fout_mem = fopen("../data/mem-cost.csv", "a");
-//     if (fout_mem == NULL)
-//         printf("Writing results fails.\n");
-//     fprintf(fout_mem, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
-//                 filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, csr_mem,mem);
-//     fclose(fout_mem);
+#if SPACE
+    // write memory space of CSR and tile format to text (scv) file
+    FILE *fout_mem = fopen("../data/mem-cost.csv", "a");
+    if (fout_mem == NULL)
+        printf("Writing results fails.\n");
+    fprintf(fout_mem, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
+                filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, csr_mem,mem);
+    fclose(fout_mem);
 
-// #endif
+#endif
 
-// #if TIMING
+#if TIMING
 
-//     // write preprocessing overhead of CSR and tile format to text (scv) file
-//     FILE *fout_pre = fopen("../data/preprocessing.csv", "a");
-//     if (fout_pre == NULL)
-//         printf("Writing results fails.\n");
-//     fprintf(fout_pre, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
-//                     filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_conversion,time_tile);
-//     fclose(fout_pre);
+    // write preprocessing overhead of CSR and tile format to text (scv) file
+    FILE *fout_pre = fopen("../data/preprocessing.csv", "a");
+    if (fout_pre == NULL)
+        printf("Writing results fails.\n");
+    fprintf(fout_pre, "%s,%i,%i,%i,%lld,%lld,%f,%f,%f\n",
+                    filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_conversion,time_tile);
+    fclose(fout_pre);
     
-// #endif
+#endif
 
 
 #endif
 
-// #if CHECK_RESULT
-// printf("-------------------------------check----------------------------------------\n");
-// tile2csr(matrixC);
-//         printf("tile to CSR conversion complete!\n");
+#if CHECK_RESULT
+printf("-------------------------------check----------------------------------------\n");
+tile2csr(matrixC, tile_size_m, tile_size_m);
+        printf("tile to CSR conversion complete!\n");
 
-//     unsigned long long int nnzC = 0;
-//     double compression_rate1 = 0;
-//     double time_cusparse = 0;
-//     double gflops_cusparse = 0;
-//     int flag =0;
-//     int mC = matrixA->m;
-//     int nC = matrixB->n;
-//     int nnzC_golden = matrixC->nnz;
-//     bool check_result = CHECK_RESULT;
+    unsigned long long int nnzC = 0;
+    double compression_rate1 = 0;
+    double time_cusparse = 0;
+    double gflops_cusparse = 0;
+    int flag =0;
+    int mC = matrixA->m;
+    int nC = matrixB->n;
+    int nnzC_golden = matrixC->nnz;
+    bool check_result = CHECK_RESULT;
 
-//     MAT_PTR_TYPE *csrRowPtrC_golden = matrixC->rowpointer;
-//     int *csrColIdxC_golden = matrixC->columnindex;
-//     MAT_VAL_TYPE *csrValC_golden = matrixC->value;
+    MAT_PTR_TYPE *csrRowPtrC_golden = matrixC->rowpointer;
+    int *csrColIdxC_golden = matrixC->columnindex;
+    MAT_VAL_TYPE *csrValC_golden = matrixC->value;
 
-//     spgemm_cu(matrixA->m, matrixA->n, matrixA->nnz, matrixA->rowpointer, matrixA->columnindex, matrixA->value,
-//               matrixB->m, matrixB->n, matrixB->nnz, matrixB->rowpointer, matrixB->columnindex, matrixB->value,
-//               mC, nC, nnzC_golden, csrRowPtrC_golden, csrColIdxC_golden, csrValC_golden,
-//               check_result, nnzCub, &nnzC, &compression_rate1, &time_cusparse, &gflops_cusparse);
-//     printf("---------------------------------------------------------------\n");
+    spgemm_cu(matrixA->m, matrixA->n, matrixA->nnz, matrixA->rowpointer, matrixA->columnindex, matrixA->value,
+              matrixB->m, matrixB->n, matrixB->nnz, matrixB->rowpointer, matrixB->columnindex, matrixB->value,
+              mC, nC, nnzC_golden, csrRowPtrC_golden, csrColIdxC_golden, csrValC_golden,
+              check_result, nnzCub, &nnzC, &compression_rate1, &time_cusparse, &gflops_cusparse);
+    printf("---------------------------------------------------------------\n");
 
-// #endif
+#endif
     matrix_destroy(matrixA);
     matrix_destroy(matrixB);
 

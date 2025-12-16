@@ -14,10 +14,10 @@ void Tile_csr_to_csr_PTR(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
                          int *csrRowPtr,
                          int csr_ptr_offset,
                          int tile_csr_offset,
-                         int tile_csrptr_offset)
+                         int tile_csrptr_offset,
+                         int tile_size_m, int tile_size_n)
 {
-
-    int rowlen = tile_row == tilem - 1 ? m - (tilem - 1) * BLOCK_SIZE : BLOCK_SIZE;
+    int rowlen = tile_row == tilem - 1 ? m - (tilem - 1) * tile_size_m : tile_size_m;
     for (int i = 0; i < rowlen; i++)
     {
         int temp = i == rowlen - 1 ? tilennz : Tile_csr_Ptr[tile_csrptr_offset + i + 1];
@@ -45,10 +45,11 @@ void Tile_csr_to_csr(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
                      int csr_ptr_offset,
                      int tile_csrptr_offset,
                      int tile_csr_index_offset,
-                     int *row_nnz_offset)
+                     int *row_nnz_offset,
+                     int tile_size_m, int tile_size_n)
 
 {
-    int rowlen = tile_row == tilem - 1 ? m - (tilem - 1) * BLOCK_SIZE : BLOCK_SIZE;
+    int rowlen = tile_row == tilem - 1 ? m - (tilem - 1) * tile_size_m : tile_size_m;
     for (int i = 0; i < rowlen; i++)
     {
         int start = Tile_csr_Ptr[tile_csrptr_offset + i];
@@ -57,10 +58,10 @@ void Tile_csr_to_csr(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
         {
             // if (Tile_csr_Val[tile_csr_index_offset + j] != 0)
             // {
-                int temp = csrRowPtr[csr_ptr_offset + i] + row_nnz_offset[tile_row * BLOCK_SIZE + i];
-                csrColIdx[temp] = tile_col * BLOCK_SIZE + Tile_csr_Col[tile_csr_index_offset + j];
+                int temp = csrRowPtr[csr_ptr_offset + i] + row_nnz_offset[tile_row * tile_size_m + i];
+                csrColIdx[temp] = tile_col * tile_size_n + Tile_csr_Col[tile_csr_index_offset + j];
                 csrVal[temp] = Tile_csr_Val[tile_csr_index_offset + j];
-                row_nnz_offset[tile_row * BLOCK_SIZE + i]++;
+                row_nnz_offset[tile_row * tile_size_m + i]++;
             // }
         }
     }
@@ -68,19 +69,21 @@ void Tile_csr_to_csr(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
 
 
 
-void tile2csr(SMatrix *matrix)
+void tile2csr(SMatrix *matrix, int tile_size_m, int tile_size_n)
 {
 
     matrix->rowpointer = (MAT_PTR_TYPE *)malloc((matrix->m + 1) *sizeof(MAT_PTR_TYPE));
     MAT_PTR_TYPE *csrRowPtr = matrix->rowpointer;
     memset(csrRowPtr, 0, (matrix->m + 1) * sizeof(MAT_PTR_TYPE));
 
-#pragma omp parallel for
+    // printf("[DEBUG] matrix->tilem: %d\n", matrix->tilem);
+// #pragma omp parallel for
     for (int i = 0; i < matrix->tilem; i++)
     {
+        // printf("[DEBUG] tile_ptr[%d]: %d\n", i, matrix->tile_ptr[i]);
         for (int j = matrix->tile_ptr[i]; j < matrix->tile_ptr[i + 1]; j++)
         {
-            int csr_ptr_offset = i * BLOCK_SIZE;
+            int csr_ptr_offset = i * tile_size_m;
             int tilennz = matrix->tile_nnz[j + 1] - matrix->tile_nnz[j];
             int m = matrix->m;
             int n = matrix->n;
@@ -90,10 +93,11 @@ void tile2csr(SMatrix *matrix)
             int tile_row = i;
             int tile_col = matrix->tile_columnidx[j];
             int tile_csr_offset = matrix->tile_nnz[j];
-            int tile_csrptr_offset = j * BLOCK_SIZE;
+            int tile_csrptr_offset = j * tile_size_m;
 
             Tile_csr_to_csr_PTR(matrix->tile_csr_Ptr, matrix->tile_csr_Value, tilennz, tilem, m, tile_row, csrRowPtr,
-                                csr_ptr_offset, tile_csr_offset, tile_csrptr_offset);
+                                csr_ptr_offset, tile_csr_offset, tile_csrptr_offset,
+                                tile_size_m, tile_size_n);
         }
     }
     exclusive_scan(csrRowPtr, matrix->m + 1);
@@ -112,12 +116,12 @@ void tile2csr(SMatrix *matrix)
     int *row_nnz_offset = (int *)malloc(sizeof(int) * matrix->m);
     memset(row_nnz_offset, 0, sizeof(int) * matrix->m);
 
-#pragma omp parallel for
+// #pragma omp parallel for
     for (int i = 0; i < matrix->tilem; i++)
     {
         for (int j = matrix->tile_ptr[i]; j < matrix->tile_ptr[i + 1]; j++)
         {
-            int csr_ptr_offset = i * BLOCK_SIZE;
+            int csr_ptr_offset = i * tile_size_m;
             int tilennz = matrix->tile_nnz[j + 1] - matrix->tile_nnz[j];
             int m = matrix->m;
             int n = matrix->n;
@@ -127,11 +131,12 @@ void tile2csr(SMatrix *matrix)
             int tile_row = i;
             int tile_col = matrix->tile_columnidx[j];
             int tile_csr_index_offset = matrix->tile_nnz[j];
-            int tile_csrptr_offset = j * BLOCK_SIZE;
+            int tile_csrptr_offset = j * tile_size_m;
 
             Tile_csr_to_csr(matrix->tile_csr_Ptr, matrix->tile_csr_Col, matrix->tile_csr_Value,
                             tilennz, tilem, m, tile_row, tile_col, csrRowPtr, csrColIdx, csrVal,
-                            csr_ptr_offset, tile_csrptr_offset, tile_csr_index_offset, row_nnz_offset);
+                            csr_ptr_offset, tile_csrptr_offset, tile_csr_index_offset, row_nnz_offset,
+                            tile_size_m, tile_size_n);
         }
     }
 }
