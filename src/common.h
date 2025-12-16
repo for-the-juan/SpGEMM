@@ -133,6 +133,8 @@
 #define USE_DNS_THREAD 0
 #define HASH_SCALE 107
 
+#define TILE_MAX_ROW_NUM 128
+
 // ---------------------- Tile 类型定义 ----------------------
 // 使用固定类型，不再依赖编译时宏定义
 typedef uint16_t TILE_CSR_PTR_TYPE;  // 固定使用 uint32_t，若 row * col < 65536，就可以改成unsigned short，记得同时改utils.h中的TILE_EXCLUSIVE_SCAN_FUNC类型
