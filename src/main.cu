@@ -13,9 +13,9 @@
 int main(int argc, char ** argv)
 {
 
-	if (argc < 7)
+	if (argc < 5)
     {
-        printf("Run the code by './test -d 0 -aat 0 matrix.mtx tile_size_m tile_size_n'.\n");
+        printf("Run the code by './test -d 0 -aat 0 matrix.mtx'.\n");
         return 0;
     }
 	
@@ -83,13 +83,6 @@ int main(int argc, char ** argv)
     argi++;
 
     // The tile of A is m×n, and the tile of B is n×m
-    int tile_size_m;
-    tile_size_m = atoi(argv[argi]);
-    argi++;
-
-    int tile_size_n;
-    tile_size_n = atoi(argv[argi]);
-    
     printf("MAT: -------------- %s --------------\n", filename);
 
     // load mtx A data to the csr format
@@ -105,8 +98,8 @@ int main(int argc, char ** argv)
         return 0;
     }
 
-    printf("the tile_size_m = %d\n", tile_size_m);
-    printf("the tile_size_n = %d\n", tile_size_n);
+    printf("the TILE_SIZE_M = %d\n", TILE_SIZE_M);
+    printf("the TILE_SIZE_N = %d\n", TILE_SIZE_N);
 
 	for (int i = 0; i < matrixA->nnz; i++)
 	    matrixA->value[i] = i % 10;
@@ -165,7 +158,7 @@ int main(int argc, char ** argv)
         gettimeofday(&t1, NULL);
 #endif
 
-        csr2tile_row_major(matrixA, tile_size_m, tile_size_n);
+        csr2tile_row_major(matrixA, TILE_SIZE_M, TILE_SIZE_N);
 
 #if TIMING
         gettimeofday(&t2, NULL);
@@ -188,7 +181,7 @@ printf("tile space overhead = %.2f MB\n", mem);
 
 #endif
 
-        csr2tile_col_major(matrixB, tile_size_m, tile_size_n);
+        csr2tile_col_major(matrixB, TILE_SIZE_M, TILE_SIZE_N);
 
 
         // how much unsigned int to store the row-wise tile bitmask
@@ -272,8 +265,7 @@ printf("tile space overhead = %.2f MB\n", mem);
                &time_tile,
                &gflops_tile,
                filename,
-               &time_step1,&time_step2,&time_step3,&time_malloc,
-               tile_size_m, tile_size_n);
+               &time_step1,&time_step2,&time_step3,&time_malloc);
 
     // for (int i = 0; i < 10; i++){
     //     printf("[DEBUG] tile_ptr[%d]: %d\n", i, matrixC->tile_ptr[i]);
@@ -324,7 +316,7 @@ printf("tile space overhead = %.2f MB\n", mem);
 
 #if CHECK_RESULT
 printf("-------------------------------check----------------------------------------\n");
-tile2csr(matrixC, tile_size_m, tile_size_m);
+tile2csr(matrixC, TILE_SIZE_M, TILE_SIZE_M);
         printf("tile to CSR conversion complete!\n");
 
     unsigned long long int nnzC = 0;

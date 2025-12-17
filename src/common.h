@@ -71,7 +71,7 @@
 
 // DEBUG打印控制宏：设置为1启用DEBUG打印，0禁用（提升性能）
 #ifndef DEBUG_PRINT_ENABLE
-#define DEBUG_PRINT_ENABLE 1  // Temporarily enable for debugging
+#define DEBUG_PRINT_ENABLE 0  // Temporarily enable for debugging
 #endif
 
 // CPU端的DEBUG打印宏
@@ -135,6 +135,15 @@
 
 #define TILE_MAX_ROW_NUM 128
 
+// e.g., nvcc -DTILE_SIZE_M=64 ...
+#ifndef TILE_SIZE_M
+#define TILE_SIZE_M 16
+#endif
+
+#ifndef TILE_SIZE_N
+#define TILE_SIZE_N 64
+#endif
+
 // ---------------------- Tile 类型定义 ----------------------
 // 使用固定类型，不再依赖编译时宏定义
 typedef uint16_t TILE_CSR_PTR_TYPE;  // 固定使用 uint32_t，若 row * col < 65536，就可以改成unsigned short，记得同时改utils.h中的TILE_EXCLUSIVE_SCAN_FUNC类型
@@ -144,6 +153,9 @@ typedef uint16_t TILE_MASK_TYPE;
 typedef uint32_t INTERSEC_BITMASK_TYPE;
 
 #define MaskBits (sizeof(TILE_MASK_TYPE) * 8)
+#define MaskNumA (TILE_SIZE_N / MaskBits)
+#define MaskNumB (TILE_SIZE_M / MaskBits)
+#define MaskNumC (TILE_SIZE_M / MaskBits) // tile_size_k
 
 #ifndef SMATRIX
 #define SMATRIX

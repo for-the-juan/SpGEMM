@@ -1,3 +1,7 @@
 src/test
 .vscode
 .cursor
+data/*.csv
+src/benchmark_results
+bin
+runall.sh
