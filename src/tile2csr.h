@@ -76,11 +76,9 @@ void tile2csr(SMatrix *matrix, int tile_size_m, int tile_size_n)
     MAT_PTR_TYPE *csrRowPtr = matrix->rowpointer;
     memset(csrRowPtr, 0, (matrix->m + 1) * sizeof(MAT_PTR_TYPE));
 
-    // printf("[DEBUG] matrix->tilem: %d\n", matrix->tilem);
 // #pragma omp parallel for
     for (int i = 0; i < matrix->tilem; i++)
     {
-        // printf("[DEBUG] tile_ptr[%d]: %d\n", i, matrix->tile_ptr[i]);
         for (int j = matrix->tile_ptr[i]; j < matrix->tile_ptr[i + 1]; j++)
         {
             int csr_ptr_offset = i * tile_size_m;

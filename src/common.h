@@ -105,8 +105,8 @@
 
 #define SMEM_TNY_TH 32
 #define SMEM_SML_TH 32 //112
-#define SMEM_LRG_TH 224
-#define SMEM_DNS_TH 256
+#define SMEM_LRG_TH 512
+#define SMEM_DNS_TH 1024
 
 #define USE_HALFWARP 1
 #define TILE_PER_WARP 16 // should not be larger than WARPSIZE

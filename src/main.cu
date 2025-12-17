@@ -82,7 +82,7 @@ int main(int argc, char ** argv)
     filename = argv[argi];
     argi++;
 
-    // A中tile大小为m×n, B中tile大小是n×m
+    // The tile of A is m×n, and the tile of B is n×m
     int tile_size_m;
     tile_size_m = atoi(argv[argi]);
     argi++;
@@ -287,7 +287,7 @@ printf("tile space overhead = %.2f MB\n", mem);
             filename, matrixA->m, matrixA->n, matrixA->nnz, nnzCub, nnzC_computed, compression_rate, time_tile, gflops_tile);
     fclose(fout);
 
-    // write runtime of each step to text (scv) file
+    // write runtime of each step to text (csv) file
     FILE *fout_time = fopen("../data/step_runtime.csv", "a");
     if (fout_time == NULL)
         printf("Writing results fails.\n");
@@ -297,7 +297,7 @@ printf("tile space overhead = %.2f MB\n", mem);
     
 
 #if SPACE
-    // write memory space of CSR and tile format to text (scv) file
+    // write memory space of CSR and tile format to text (csv) file
     FILE *fout_mem = fopen("../data/mem-cost.csv", "a");
     if (fout_mem == NULL)
         printf("Writing results fails.\n");
