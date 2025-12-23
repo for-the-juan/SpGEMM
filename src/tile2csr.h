@@ -32,7 +32,7 @@ void Tile_csr_to_csr_PTR(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
 }
 
 void Tile_csr_to_csr(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
-                     TILE_CSR_PTR_TYPE *Tile_csr_Col,
+                     TILE_CSR_COL_TYPE_B *Tile_csr_Col,
                      MAT_VAL_TYPE *Tile_csr_Val,
                      int tilennz,
                      int tilem,
@@ -69,7 +69,7 @@ void Tile_csr_to_csr(TILE_CSR_PTR_TYPE *Tile_csr_Ptr,
 
 
 
-void tile2csr(SMatrix *matrix, int tile_size_m, int tile_size_n)
+void tile2csr(SMatrixB *matrix, int tile_size_m, int tile_size_n)
 {
 
     matrix->rowpointer = (MAT_PTR_TYPE *)malloc((matrix->m + 1) *sizeof(MAT_PTR_TYPE));

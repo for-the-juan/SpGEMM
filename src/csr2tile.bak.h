@@ -201,7 +201,7 @@ void step3_kernel(SMatrix *matrix, int nnz_max, int tilecnt_max, int tile_size_m
     free(tile_count_g);
 }
 
-void csr2tile_row_major(SMatrix *matrix, int tile_size_m, int tile_size_n)
+void csr2tile_row_major(SMatrixA *matrix, int tile_size_m, int tile_size_n)
 {
     int nthreads = omp_get_max_threads();
 

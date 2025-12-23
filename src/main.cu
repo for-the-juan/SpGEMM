@@ -75,8 +75,8 @@ int main(int argc, char ** argv)
     }
 
  	struct timeval t1, t2;
-	SMatrix *matrixA = (SMatrix *)malloc(sizeof(SMatrix));
-	SMatrix *matrixB = (SMatrix *)malloc(sizeof(SMatrix));
+	SMatrixA *matrixA = (SMatrixA *)malloc(sizeof(SMatrixA));
+	SMatrixB *matrixB = (SMatrixB *)malloc(sizeof(SMatrixB));
 
 	char  *filename;
     filename = argv[argi];
@@ -169,8 +169,8 @@ int main(int argc, char ** argv)
 #if SPACE
 
 double tile_bytes = (matrixA->tilem + 1) * sizeof(int) + matrixA->numtile * sizeof(int) + (matrixA->numtile + 1) *sizeof(int) +
-                matrixA->nnz * sizeof(MAT_VAL_TYPE) + matrixA->nnz * sizeof(unsigned char) + matrixA->numtile * BLOCK_SIZE * sizeof(unsigned char) +
-                matrixA->numtile * BLOCK_SIZE * sizeof(unsigned short);
+                matrixA->nnz * sizeof(MAT_VAL_TYPE) + matrixA->nnz * sizeof(TILE_CSR_COL_TYPE_A) + matrixA->numtile * TILE_SIZE_M * sizeof(TILE_CSR_PTR_TYPE) +
+                matrixA->numtile * TILE_SIZE_M * sizeof(TILE_MASK_TYPE_A);
 
 double mem = tile_bytes/1024/1024;
 
@@ -239,7 +239,7 @@ printf("tile space overhead = %.2f MB\n", mem);
 
 #ifdef DEBUG
     // --------------------------------------------------------------------------------------------------------
-    SMatrix *matrixC = (SMatrix *)malloc(sizeof(SMatrix));
+    SMatrixB *matrixC = (SMatrixB *)malloc(sizeof(SMatrixB));
     
     struct timeval tv;
     unsigned long long int nnzC_computed;
@@ -341,7 +341,7 @@ tile2csr(matrixC, TILE_SIZE_M, TILE_SIZE_M);
 
 #endif
     matrix_destroy(matrixA);
-    matrix_destroy(matrixB);
+    matrix_destroy_B(matrixB);
 
     free(matrixA->rowpointer);
     free(matrixA->columnindex);

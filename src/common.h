@@ -24,36 +24,61 @@
 #endif
 
 #ifndef MAT_PTR_TYPE
-#define MAT_PTR_TYPE int  // 表示存csr中的pointer的类型
+#define MAT_PTR_TYPE int
 #endif
 
-#define WARP_SIZE 32
-#define WARP_PER_BLOCK 4
+// e.g., nvcc -DTILE_SIZE_M=64 ...
+#ifndef TILE_SIZE_M
+#define TILE_SIZE_M 8
+#endif
+
+#ifndef TILE_SIZE_N
+#define TILE_SIZE_N 8
+#endif
 
 #define HALFWARP_SIZE 16
+// #if TILE_SIZE_M * TILE_SIZE_M <= 8 * 16 * 16
+//     #define HALFWARP_PER_BLOCK (8 * 16 * 16 / TILE_SIZE_M / TILE_SIZE_M)
+//     // #define HALFWARP_PER_BLOCK 8
+// #else
+//     #define HALFWARP_PER_BLOCK 1
+// #endif
+
+#define WARP_SIZE 32
+// #if TILE_SIZE_M * TILE_SIZE_M <= 4 * 16 * 16
+//     #define WARP_PER_BLOCK (4 * 16 * 16 / TILE_SIZE_M / TILE_SIZE_M)
+//     // #define WARP_PER_BLOCK 4
+// #else
+//     #define WARP_PER_BLOCK 1
+// #endif
+
 #define HALFWARP_PER_BLOCK 8
-
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE  16
-#endif
-
-
-#define SMEM_TNY_TH 32
-#define SMEM_SML_TH 32 //112
-#define SMEM_LRG_TH 224
-#define SMEM_DNS_TH 256
+#define WARP_PER_BLOCK 4
 
 #define USE_HALFWARP 1
-#define TILE_PER_WARP 16 // should not be larger than WARPSIZE
-#define TILE_PER_HALFWARP 8 // should not be larger than HALFWARP_SIZE
 
-//#define LOAD_MASKB_TH 4
+// #if TILE_SIZE_M <= 256
+//     #define TILE_PER_WARP (16 * 16 / TILE_SIZE_M) // should not be larger than WARPSIZE
+// #else
+//     #define TILE_PER_WARP 1
+// #endif
+
+#define TILE_PER_WARP 16
+
+// #if TILE_SIZE_M <= 128
+//     #define TILE_PER_HALFWARP (8 * 16 / TILE_SIZE_M) // should not be larger than HALFWARP_SIZE
+// #else
+//     #define TILE_PER_HALFWARP 1
+// #endif
+#define TILE_PER_HALFWARP 8
+
+// #define VECTORIZE_NNZA_OR_NNZB_TH (8 * TILE_SIZE_M * TILE_SIZE_N / 16 / 16) 
 #define VECTORIZE_NNZA_OR_NNZB_TH 8
 
 #define SMEM_INTERSECTION_TH 16
 #define SMEM_INTERSECTION_LEN 48
 
-#define USE_GMEM_SPECULATIVE_INTERSECTION 1
+#define USE_GMEM_SPECULATIVE_INTERSECTION 0
 #define GMEM_SPECULATIVE_INTERSECTION 1
 
 #define SPECULATIVE_INTERSECTION 32
@@ -65,23 +90,22 @@
 #define INTERSECTION_SPARSE_OR_DNS_TH 0.2
 #define NNZTOTALA_FAST_TRACK_TH2 192
 
-#define USE_DNS_THREAD 1
+#define USE_DNS_THREAD 0
 
 #define DEBUG 1
 
-// DEBUG打印控制宏：设置为1启用DEBUG打印，0禁用（提升性能）
 #ifndef DEBUG_PRINT_ENABLE
 #define DEBUG_PRINT_ENABLE 0  // Temporarily enable for debugging
 #endif
 
-// CPU端的DEBUG打印宏
+// CPU DEBUG
 #if DEBUG_PRINT_ENABLE
 #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
 #define DEBUG_PRINT(...) ((void)0)
 #endif
 
-// CUDA kernel中的DEBUG打印宏
+// CUDA kernel DEBUG
 #if DEBUG_PRINT_ENABLE
 #define DEBUG_PRINT_CUDA(...) printf(__VA_ARGS__)
 #else
@@ -98,64 +122,73 @@
 #define SPACE 1
 #endif
 
-
 #ifndef CHECK_RESULT
 #define CHECK_RESULT 1
 #endif
 
-#define SMEM_TNY_TH 32
-#define SMEM_SML_TH 32 //112
-#define SMEM_LRG_TH 512
-#define SMEM_DNS_TH 1024
-
-#define USE_HALFWARP 1
-#define TILE_PER_WARP 16 // should not be larger than WARPSIZE
-#define TILE_PER_HALFWARP 8 // should not be larger than HALFWARP_SIZE
-
-#define VECTORIZE_NNZA_OR_NNZB_TH 8
-
-#define SMEM_INTERSECTION_TH 16
-#define SMEM_INTERSECTION_LEN 48
-
-#define USE_GMEM_SPECULATIVE_INTERSECTION 1
-#define GMEM_SPECULATIVE_INTERSECTION 1
-
-#define SPECULATIVE_INTERSECTION 32
-
-#define SPA_INT_PER_WARP 512
-#define NUMCOLC_SPA_OR_HASH_TH     SPA_INT_PER_WARP * 32 // SPA_INT_PER_WARP int per warp
-
-
-// e.g., INTERSECTION_SPARSE_OR_DNS_TH = 0.2 means when density is higher than 20%, use DNS for intersection
-#define INTERSECTION_SPARSE_OR_DNS_TH 0.2
-#define NNZTOTALA_FAST_TRACK_TH2 192
-
-#define USE_DNS_THREAD 0
 #define HASH_SCALE 107
 
-#define TILE_MAX_ROW_NUM 128
+#define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+#define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M) //112 7/16
+// #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+#define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M)
+#define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
 
-// e.g., nvcc -DTILE_SIZE_M=64 ...
-#ifndef TILE_SIZE_M
-#define TILE_SIZE_M 16
-#endif
-
-#ifndef TILE_SIZE_N
-#define TILE_SIZE_N 64
-#endif
+// #define SMEM_TNY_TH 32
+// #define SMEM_SML_TH 32 //112 7/16
+// // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+// #define SMEM_LRG_TH 224
+// #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
 
 // ---------------------- Tile 类型定义 ----------------------
-// 使用固定类型，不再依赖编译时宏定义
-typedef uint16_t TILE_CSR_PTR_TYPE;  // 固定使用 uint32_t，若 row * col < 65536，就可以改成unsigned short，记得同时改utils.h中的TILE_EXCLUSIVE_SCAN_FUNC类型
-typedef uint16_t TILE_CSR_COL_TYPE;  // 固定使用 uint32_t，若 row 和 col 都在256以下，就可以改成unsigned short
+#if TILE_SIZE_M * TILE_SIZE_N <= 256 && TILE_SIZE_M * TILE_SIZE_M <= 256
+    typedef uint8_t TILE_CSR_PTR_TYPE;
+#elif TILE_SIZE_M * TILE_SIZE_N <= 65536 && TILE_SIZE_M * TILE_SIZE_M <= 65536
+    typedef uint16_t TILE_CSR_PTR_TYPE;
+#else
+    typedef uint32_t TILE_CSR_PTR_TYPE;
+#endif
 
-typedef uint16_t TILE_MASK_TYPE;
+#if TILE_SIZE_M * TILE_SIZE_N <= 256
+    typedef uint8_t TILE_CSR_COL_TYPE_A;
+#elif TILE_SIZE_M * TILE_SIZE_N <= 65536
+    typedef uint16_t TILE_CSR_COL_TYPE_A;
+#else
+    typedef uint32_t TILE_CSR_COL_TYPE_A;
+#endif
+
+#if TILE_SIZE_M <= 256
+    typedef uint8_t TILE_CSR_COL_TYPE_B;
+#else
+    typedef uint16_t TILE_CSR_COL_TYPE_B;
+#endif
+
 typedef uint32_t INTERSEC_BITMASK_TYPE;
 
-#define MaskBits (sizeof(TILE_MASK_TYPE) * 8)
-#define MaskNumA (TILE_SIZE_N / MaskBits)
-#define MaskNumB (TILE_SIZE_M / MaskBits)
-#define MaskNumC (TILE_SIZE_M / MaskBits) // tile_size_k
+#if TILE_SIZE_N == 8
+    typedef uint8_t TILE_MASK_TYPE_A;
+#elif TILE_SIZE_N == 16
+    typedef uint16_t TILE_MASK_TYPE_A;
+#else  // TILE_SIZE_M >= 32
+    typedef uint32_t TILE_MASK_TYPE_A;
+#endif
+
+// Matrix B and Matrix C share the same TILE_MASK_TYPE
+#if TILE_SIZE_M == 8
+    typedef uint8_t TILE_MASK_TYPE_B;
+#elif TILE_SIZE_M == 16
+    typedef uint16_t TILE_MASK_TYPE_B;
+#else  // TILE_SIZE_M >= 32
+    typedef uint32_t TILE_MASK_TYPE_B;
+#endif
+
+#define MaskBitsA (sizeof(TILE_MASK_TYPE_A) * 8)
+#define MaskBitsB (sizeof(TILE_MASK_TYPE_B) * 8)
+#define MaskBitsC (sizeof(TILE_MASK_TYPE_B) * 8)
+
+#define MaskNumA (TILE_SIZE_N / MaskBitsA)
+#define MaskNumB (TILE_SIZE_M / MaskBitsB)
+#define MaskNumC (TILE_SIZE_M / MaskBitsC) // tile_size_k
 
 #ifndef SMATRIX
 #define SMATRIX
@@ -176,11 +209,35 @@ typedef struct
     int *tile_nnz;
     int numtile;  //非零tile数
     MAT_VAL_TYPE *tile_csr_Value;
-    TILE_CSR_COL_TYPE *tile_csr_Col;
+    TILE_CSR_COL_TYPE_A *tile_csr_Col;
     TILE_CSR_PTR_TYPE *tile_csr_Ptr;
-    TILE_MASK_TYPE *mask;  // 动态分配的掩码数组
+    TILE_MASK_TYPE_A *mask;  // 动态分配的掩码数组
     int *csc_tile_ptr;
     int *csc_tile_rowidx;
-}SMatrix;
-#endif
+}SMatrixA;
 
+// Matrix C also uses SMatrixB, since they share the same TILE_CSR_COL_TYPE and TILE_MASK_TYPE
+typedef struct
+{
+    int m;
+    int n;
+    int nnz;
+    int isSymmetric;
+    MAT_VAL_TYPE *value;
+    int *columnindex;
+    MAT_PTR_TYPE *rowpointer;
+    int tilem;
+    int tilen;
+    MAT_PTR_TYPE *tile_ptr;
+    int *tile_columnidx;
+    int *tile_rowidx;
+    int *tile_nnz;
+    int numtile;  //非零tile数
+    MAT_VAL_TYPE *tile_csr_Value;
+    TILE_CSR_COL_TYPE_B *tile_csr_Col;
+    TILE_CSR_PTR_TYPE *tile_csr_Ptr;
+    TILE_MASK_TYPE_B *mask;  // 动态分配的掩码数组
+    int *csc_tile_ptr;
+    int *csc_tile_rowidx;
+}SMatrixB;
+#endif

@@ -50,25 +50,17 @@ void exclusive_scan(MAT_PTR_TYPE *input, int length)
     }
 }
 
-#define DEFINE_EXCLUSIVE_SCAN(type, name)              \
-static inline void name(type *input, int length) {     \
-    if (length <= 1) return;                           \
-    type old_val = input[0], new_val;                  \
-    input[0] = 0;                                      \
-    for (int i = 1; i < length; i++) {                 \
-        new_val = input[i];                            \
-        input[i] = old_val + input[i - 1];             \
-        old_val = new_val;                             \
-    }                                                  \
+template <typename T>
+static inline void TILE_EXCLUSIVE_SCAN_FUNC(T *input, int length){
+    if (length <= 1) return;
+    T old_val = input[0], new_val;
+    input[0] = 0;
+    for (int i = 1; i < length; i++) {
+        new_val = input[i];
+        input[i] = old_val + input[i - 1];
+        old_val = new_val;
+    }
 }
-
-// 生成不同类型的版本
-DEFINE_EXCLUSIVE_SCAN(uint8_t,  exclusive_scan_uint8)
-DEFINE_EXCLUSIVE_SCAN(uint16_t, exclusive_scan_uint16)
-DEFINE_EXCLUSIVE_SCAN(uint32_t, exclusive_scan_uint32)
-DEFINE_EXCLUSIVE_SCAN(uint64_t, exclusive_scan_uint64)
-
-#define TILE_EXCLUSIVE_SCAN_FUNC(input, length) exclusive_scan_uint16(input, length) // 根据 TILE_CSR_PTR_TYPE 的类型选择对应的前缀和函数
 
 
 void swap_key(int *a , int *b)

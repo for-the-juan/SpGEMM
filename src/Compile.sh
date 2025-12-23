@@ -8,7 +8,7 @@ MAT_VAL_TYPE="double"
 VALUE_TYPE="double"
 
 #CUDA_PARAMETERS
-NVCC_FLAGS="-O3 -w -arch=compute_61 -code=sm_80 -gencode=arch=compute_61,code=sm_80"
+NVCC_FLAGS="-O3 -w -arch=compute_61 -code=sm_80 -gencode=arch=compute_61,code=sm_80 -std=c++17"
 #-gencode=arch=compute_61,code=sm_75
 # -m64 -Xptxas -dlcm=cg -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_61,code=compute_61
 #-Xcompiler -Wall -D_FORCE_INLINES -DVERBOSE --expt-extended-lambda -use_fast_math --expt-relaxed-constexpr
@@ -31,6 +31,7 @@ TILE_SIZE_N=(16 32 64)
 #OPTIONS = -std=c99
 
 mkdir -p ../bin
+rm -rf ../bin/*
 for i in ${TILE_SIZE_M[@]}; do
     for j in ${TILE_SIZE_N[@]}; do
         ${CC} ${NVCC_FLAGS} -Xcompiler -fopenmp -Xcompiler -mfma main.cu -o ../bin/test_m${i}_n${j} ${INCLUDES} ${LIBS} ${OPTIONS} -D VALUE_TYPE=${VALUE_TYPE} -D TILE_SIZE_M=${i} -D TILE_SIZE_N=${j} &

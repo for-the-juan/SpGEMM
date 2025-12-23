@@ -66,6 +66,69 @@ __device__ __inline__ unsigned short ld_gbl_ushort(const unsigned short *col)
     return return_value;
 }
 
+template <typename T>
+__device__ __inline__ T ld_gbl_auto(const T *col)
+{
+    T return_value;
+    
+    if constexpr (std::is_same_v<T, uint8_t>) {
+        short return_value_;
+        asm("ld.global.cv.u8 %0, [%1];" : "=h"(return_value_) : "l"(col));
+        return_value = (uint8_t)return_value_;
+    }
+    else if constexpr (std::is_same_v<T, uint16_t>) {
+        asm("ld.global.cv.u16 %0, [%1];" : "=h"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, uint32_t>) {
+        asm("ld.global.cv.u32 %0, [%1];" : "=r"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, int16_t>) {
+        asm("ld.global.cv.s16 %0, [%1];" : "=h"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, int32_t>) {
+        asm("ld.global.cv.s32 %0, [%1];" : "=r"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, int64_t>) {
+        asm("ld.global.cv.s64 %0, [%1];" : "=l"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, float>) {
+        asm("ld.global.cv.f32 %0, [%1];" : "=f"(return_value) : "l"(col));
+    }
+    else if constexpr (std::is_same_v<T, double>) {
+        asm("ld.global.cv.f64 %0, [%1];" : "=d"(return_value) : "l"(col));
+    }
+    else {
+        static_assert(sizeof(T) == 0, "Unsupported type for ld_gbl_cv");
+    }
+
+    return return_value;
+}
+
+template <typename T>
+__forceinline__ __device__ int binary_search_exact_auto_kernel(const T *__restrict__ d_array, int l, int r, T key)
+{
+    while (l <= r)
+    {
+        int m = l + (r - l) / 2;
+        T elem = d_array[m];
+        // Check if x is present at mid
+        if (elem == key)
+            return m;
+
+        // If x greater, ignore left half
+        if (elem < key)
+            l = m + 1;
+
+        // If x is smaller, ignore right half
+        else
+            r = m - 1;
+    }
+
+    // if we reach here, then element was
+    // not present
+    return -1;
+}
+
 __device__ __inline__ unsigned char ld_gbl_uchar(const unsigned char *row)
 {
     short return_value;
