@@ -4,5 +4,8 @@ src/test
 data/*.csv
 src/benchmark_results
 bin
-runall.sh
 profile
+*log
+*.out
+*.csv
+*.py

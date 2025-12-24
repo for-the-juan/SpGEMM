@@ -24,8 +24,8 @@ INCLUDES="-I${CUDA_INSTALL_PATH}/include"
 CUDA_LIBS="-L${CUDA_INSTALL_PATH}/lib64  -lcudart  -lcusparse"
 LIBS=${CUDA_LIBS}
 
-TILE_SIZE_M=(16 32 64)
-TILE_SIZE_N=(16 32 64)
+TILE_SIZE_M=(8 16 32 64)
+TILE_SIZE_N=(8 16 32 64)
 
 #options
 #OPTIONS = -std=c99

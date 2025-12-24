@@ -33,7 +33,7 @@
 #endif
 
 #ifndef TILE_SIZE_N
-#define TILE_SIZE_N 64
+#define TILE_SIZE_N 16
 #endif
 
 #define QUADWARP_SIZE 8
