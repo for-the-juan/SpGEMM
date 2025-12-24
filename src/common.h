@@ -36,6 +36,7 @@
 #define TILE_SIZE_N 8
 #endif
 
+#define QUADWARP_SIZE 8
 #define HALFWARP_SIZE 16
 // #if TILE_SIZE_M * TILE_SIZE_M <= 8 * 16 * 16
 //     #define HALFWARP_PER_BLOCK (8 * 16 * 16 / TILE_SIZE_M / TILE_SIZE_M)
@@ -52,6 +53,7 @@
 //     #define WARP_PER_BLOCK 1
 // #endif
 
+#define QUADWARP_PER_BLOCK 16
 #define HALFWARP_PER_BLOCK 8
 #define WARP_PER_BLOCK 4
 
@@ -70,7 +72,12 @@
 // #else
 //     #define TILE_PER_HALFWARP 1
 // #endif
+
 #define TILE_PER_HALFWARP 8
+
+#define TILE_PER_QUADWARP 4
+
+#define TILE_PER_ADAPTIVE_WARP 8
 
 // #define VECTORIZE_NNZA_OR_NNZB_TH (8 * TILE_SIZE_M * TILE_SIZE_N / 16 / 16) 
 #define VECTORIZE_NNZA_OR_NNZB_TH 8
@@ -85,6 +92,8 @@
 
 #define SPA_INT_PER_WARP 512
 #define NUMCOLC_SPA_OR_HASH_TH     SPA_INT_PER_WARP * 32 // SPA_INT_PER_WARP int per warp
+
+#define USE_DENSE 0
 
 // e.g., INTERSECTION_SPARSE_OR_DNS_TH = 0.2 means when density is higher than 20%, use DNS for intersection
 #define INTERSECTION_SPARSE_OR_DNS_TH 0.2
@@ -133,6 +142,9 @@
 // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
 #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M)
 #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+
+#define STEP3_THREADS 128
+#define STEP4_THREADS 128
 
 // #define SMEM_TNY_TH 32
 // #define SMEM_SML_TH 32 //112 7/16
