@@ -29,11 +29,11 @@
 
 // e.g., nvcc -DTILE_SIZE_M=64 ...
 #ifndef TILE_SIZE_M
-#define TILE_SIZE_M 8
+#define TILE_SIZE_M 16
 #endif
 
 #ifndef TILE_SIZE_N
-#define TILE_SIZE_N 8
+#define TILE_SIZE_N 64
 #endif
 
 #define QUADWARP_SIZE 8
@@ -137,11 +137,19 @@
 
 #define HASH_SCALE 107
 
-#define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-#define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M) //112 7/16
-// #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-#define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M)
-#define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+#if TILE_SIZE_M < 64
+    #define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+    #define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M) //112 7/16
+    // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+    #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M)
+    #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+#else
+    #define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2)
+    #define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2) //112 7/16
+    // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+    #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2)
+    #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+#endif
 
 #define STEP3_THREADS 128
 #define STEP4_THREADS 128
