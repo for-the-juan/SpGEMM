@@ -1,7 +1,7 @@
 #/bin/bash
 
 # AAT="/home/stu1/Dataset/simple"
-AA="~/Dataset/TileSpGEMMDataset"
+AA="/home/stu1/Dataset/TileSpGEMMDataset"
 
 mkdir -p ./TileSpGEMMlog
 # for mtx_file in "$AAT"/*.mtx; do

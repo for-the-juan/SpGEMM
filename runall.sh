@@ -6,7 +6,7 @@ TILE_SIZE_N=(8 16 32 16 8 16 32 32 8)
 length=${#TILE_SIZE_M[@]}
 
 # AAT="/home/stu1/Dataset/simple"
-AA="~/Dataset/TileSpGEMMDataset"
+AA="/home/stu1/Dataset/TileSpGEMMDataset"
 
 mkdir -p ./log
 # for mtx_file in "$AAT"/*.mtx; do
