@@ -3,9 +3,9 @@ src/test
 .cursor
 data/*.csv
 src/benchmark_results
-bin
+bin*
 profile
-*log
+*log*
 *.out
 *.csv
 *.py

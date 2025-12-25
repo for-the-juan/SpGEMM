@@ -29,11 +29,11 @@
 
 // e.g., nvcc -DTILE_SIZE_M=64 ...
 #ifndef TILE_SIZE_M
-#define TILE_SIZE_M 16
+#define TILE_SIZE_M 8
 #endif
 
 #ifndef TILE_SIZE_N
-#define TILE_SIZE_N 16
+#define TILE_SIZE_N 8
 #endif
 
 #define QUADWARP_SIZE 8
@@ -137,28 +137,22 @@
 
 #define HASH_SCALE 107
 
-#if TILE_SIZE_M < 64
-    #define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-    #define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M) //112 7/16
-    // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-    #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M)
-    #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
-#else
-    #define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2)
-    #define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2) //112 7/16
-    // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-    #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 1 / 2)
-    #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
-#endif
+// #define SMEM_TNY_TH 32
+// #define SMEM_SML_TH 32
+// #define SMEM_LRG_TH 224
+// #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+
+#define SMEM_TNY_TH (TILE_SIZE_M * TILE_SIZE_M / 8)
+#define SMEM_SML_TH (TILE_SIZE_M * TILE_SIZE_M / 8)
+#define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
+#define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
+
+#define THREADS_USED_TNY_TH 16
+#define THREADS_USED_SML_TH 32
+#define THREADS_USED_LRG_TH 32
 
 #define STEP3_THREADS 128
 #define STEP4_THREADS 128
-
-// #define SMEM_TNY_TH 32
-// #define SMEM_SML_TH 32 //112 7/16
-// // #define SMEM_LRG_TH (TILE_SIZE_M * TILE_SIZE_M * 7 / 8)
-// #define SMEM_LRG_TH 224
-// #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
 
 // ---------------------- Tile 类型定义 ----------------------
 #if TILE_SIZE_M * TILE_SIZE_N <= 256 && TILE_SIZE_M * TILE_SIZE_M <= 256
