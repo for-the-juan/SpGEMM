@@ -29,11 +29,11 @@
 
 // e.g., nvcc -DTILE_SIZE_M=64 ...
 #ifndef TILE_SIZE_M
-#define TILE_SIZE_M 8
+#define TILE_SIZE_M 32
 #endif
 
 #ifndef TILE_SIZE_N
-#define TILE_SIZE_N 8
+#define TILE_SIZE_N 32
 #endif
 
 #define QUADWARP_SIZE 8
@@ -148,8 +148,11 @@
 #define SMEM_DNS_TH (TILE_SIZE_M * TILE_SIZE_M)
 
 #define THREADS_USED_TNY_TH 16
-#define THREADS_USED_SML_TH 32
+#define THREADS_USED_SML_TH 16
 #define THREADS_USED_LRG_TH 32
+
+// MAGIC_NUMBER should be a prime
+#define MAGIC_NUMBER 13
 
 #define STEP3_THREADS 128
 #define STEP4_THREADS 128
