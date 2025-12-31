@@ -29,11 +29,11 @@
 
 // e.g., nvcc -DTILE_SIZE_M=64 ...
 #ifndef TILE_SIZE_M
-#define TILE_SIZE_M 32
+#define TILE_SIZE_M 16
 #endif
 
 #ifndef TILE_SIZE_N
-#define TILE_SIZE_N 32
+#define TILE_SIZE_N 16
 #endif
 
 #define QUADWARP_SIZE 8
@@ -150,6 +150,7 @@
 #define THREADS_USED_TNY_TH 16
 #define THREADS_USED_SML_TH 16
 #define THREADS_USED_LRG_TH 32
+#define THREADS_USED_DNS_TH TILE_SIZE_M
 
 // MAGIC_NUMBER should be a prime
 #define MAGIC_NUMBER 13
